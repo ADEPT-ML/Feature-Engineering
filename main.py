@@ -1,7 +1,7 @@
 import dataclasses
 import json
 import pandas
-import features
+from src import features, schema
 
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,13 +27,40 @@ class JSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "there!"}
-
-
 @app.post("/diff")
 def create_diff(payload: str = Body(..., embed=True)):
     buildings = features.json_to_buildings(json.loads(payload))
     features.add_diff_cols_for_consumption_units(buildings)
     return json.dumps(buildings, cls=JSONEncoder)
+
+
+schema.custom_openapi(app)
+
+
+@app.get(
+    "/",
+    name="Root path",
+    summary="Returns the routes available through the API",
+    description="Returns a route list for easier use of API through HATEOAS",
+    response_description="List of urls to all available routes",
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "payload": [
+                            {
+                                "path": "/examplePath",
+                                "name": "example route"
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+    }
+)
+async def root():
+    url_list = [{"path": route.path, "name": route.name}
+                for route in app.routes]
+    return url_list
