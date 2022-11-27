@@ -27,16 +27,6 @@ class JSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-@app.post("/diff")
-def create_diff(payload: str = Body(..., embed=True)):
-    buildings = features.json_to_buildings(json.loads(payload))
-    features.add_diff_cols_for_consumption_units(buildings)
-    return json.dumps(buildings, cls=JSONEncoder)
-
-
-schema.custom_openapi(app)
-
-
 @app.get(
     "/",
     name="Root path",
@@ -61,6 +51,18 @@ schema.custom_openapi(app)
     }
 )
 async def root():
-    url_list = [{"path": route.path, "name": route.name}
-                for route in app.routes]
+    """Root API endpoint that lists all available API endpoints.
+
+    Returns:
+        A complete list of all possible API endpoints.
+    """
+    route_filter = ["openapi", "swagger_ui_html", "swagger_ui_redirect", "redoc_html"]
+    url_list = [{"path": route.path, "name": route.name} for route in app.routes if route.name not in route_filter]
     return url_list
+
+
+@app.post("/diff")
+def create_diff(payload: str = Body(..., embed=True)):
+    buildings = features.json_to_buildings(json.loads(payload))
+    features.add_diff_cols_for_consumption_units(buildings)
+    return json.dumps(buildings, cls=JSONEncoder)
