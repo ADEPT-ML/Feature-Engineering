@@ -66,3 +66,6 @@ def create_diff(payload: str = Body(..., embed=True)):
     buildings = features.json_to_buildings(json.loads(payload))
     features.add_diff_cols_for_consumption_units(buildings)
     return json.dumps(buildings, cls=JSONEncoder)
+
+
+schema.custom_openapi(app)
