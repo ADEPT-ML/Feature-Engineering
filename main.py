@@ -1,12 +1,16 @@
+"""The main module with all API definitions of the Feature-Engineering service"""
 import dataclasses
 import json
 import pandas
 from src import features, schema
 
 from fastapi import FastAPI, Body
+
 # from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
 # origins = ["*"]
 #
 # app.add_middleware(
@@ -19,7 +23,21 @@ app = FastAPI()
 
 
 class JSONEncoder(json.JSONEncoder):
+    """An enhanced version of the JSONEncoder class containing support for dataclasses and DataFrames."""
+
     def default(self, o):
+        """Adds JSON encoding support for dataclasses and DataFrames.
+
+        This function overrides the default function of JSONEncoder and adds support for encoding dataclasses and
+        Pandas DataFrames as JSON. Uses the superclass default function for all other types.
+
+        Args:
+            o: The object to serialize into a JSON representation.
+
+        Returns:
+            The JSON representation of the specified object.
+        """
+
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
         if isinstance(o, pandas.DataFrame):
@@ -63,6 +81,14 @@ async def root():
 
 @app.post("/diff")
 def create_diff(payload: str = Body(..., embed=True)):
+    """API endpoint for the creation of differential values for all sensors that measure consumption units.
+
+    Args:
+        payload: The JSON representation of building objects.
+
+    Returns:
+        The JSON representation of the updated buildings.
+    """
     buildings = features.json_to_buildings(json.loads(payload))
     features.add_diff_cols_for_consumption_units(buildings)
     return json.dumps(buildings, cls=JSONEncoder)
