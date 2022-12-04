@@ -1,25 +1,13 @@
 """The main module with all API definitions of the Feature-Engineering service"""
+from fastapi import FastAPI, Body
 import dataclasses
-import json
 import pandas
+import json
+
 from src import features, schema
 
-from fastapi import FastAPI, Body
-
-# from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
-
-
-# origins = ["*"]
-#
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 
 class JSONEncoder(json.JSONEncoder):
