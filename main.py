@@ -1,10 +1,10 @@
 """The main module with all API definitions of the Feature-Engineering service"""
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, HTTPException
 import dataclasses
 import pandas
 import json
 
-from src import features, schema
+from src import features, schema, normalization
 
 
 app = FastAPI()
@@ -68,7 +68,7 @@ async def root():
 
 
 @app.post("/diff")
-def create_diff(payload: str = Body(..., embed=True)):
+async def create_diff(payload = Body(..., embed=True)):
     """API endpoint for the creation of differential values for all sensors that measure consumption units.
 
     Args:
@@ -80,6 +80,52 @@ def create_diff(payload: str = Body(..., embed=True)):
     buildings = features.json_to_buildings(json.loads(payload))
     features.add_diff_cols_for_consumption_units(buildings)
     return json.dumps(buildings, cls=JSONEncoder)
+
+
+@app.post("/normalize/minmax")
+def create_diff(payload: str = Body(..., embed=True)):
+    """API endpoint for normalizing all data in a dataframe to a range from 0 to 1.
+
+    Args:
+        payload: The JSON representation of the dataframe.
+
+    Returns:
+        The JSON representation of the normalized dataframe.
+    """
+    try:
+        if not payload:
+            raise HTTPException(status_code=400, detail="Payload can not be empty")
+        buildings = features.json_to_buildings(json.loads(payload))
+        normalization.min_max_normalization(buildings)
+
+        return json.dumps(buildings, cls=JSONEncoder)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+@app.post("/normalize/mean")
+def create_diff(payload = Body(..., embed=True)):
+    """API endpoint for normalizing all data in a dataframe into a standard score.
+
+    Args:
+        payload: The JSON representation of the dataframe.
+        
+    Returns:
+        The JSON representation of the normalized dataframe.
+    """
+    try:
+        if not payload:
+            raise HTTPException(status_code=400, detail="Payload can not be empty")
+        buildings = features.json_to_buildings(json.loads(payload))
+        normalization.mean_normalization(buildings)
+
+        return json.dumps(buildings, cls=JSONEncoder)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 schema.custom_openapi(app)
