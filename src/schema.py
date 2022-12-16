@@ -19,7 +19,7 @@ def custom_openapi(app):
     openapi_schema = get_openapi(
         title="Feature-Engineering API",
         version="0.1.0",
-        description="API for basic feature-engineering on building data",
+        description="API for basic feature-engineering on building data including diff-calculation and normalization",
         routes=app.routes,
     )
     openapi_schema["info"]["x-logo"] = {
