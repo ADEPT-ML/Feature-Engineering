@@ -1,6 +1,6 @@
 """Contains all functions related to normalizing"""
-import json
 from dataclasses import dataclass
+
 import pandas as pd
 
 
